@@ -18,8 +18,8 @@ class Vizualisation(object):
 
     """
 
-    FIG_W = 12  # Figure width
-    FIG_H = 8  # Figure height
+    FIG_W = 6  # Figure width
+    FIG_H = 4  # Figure height
 
     BOX = [0.1, 0.1, 0.8, 0.8]       # Box axes 1
     XLIM = [-0.1, 1.1]
@@ -43,7 +43,7 @@ class Vizualisation(object):
 
         :param file_name - str, name of the file with the data.
         """
-        x, t = DataIO.read_data(file_name)
+        x, t, e = DataIO.read_data(file_name)
         self.AX1.plot(x, t,
                       marker='o',
                       markersize=7,
@@ -75,8 +75,6 @@ class Vizualisation(object):
                 color=self.CLR_MODEL,
                 zorder=3)
 
-
-
-    def show(self):
+    def to_file(self, file_name):
         """ Show figure on screen. """
-        plt.show(self.FIG)
+        self.FIG.savefig(file_name)

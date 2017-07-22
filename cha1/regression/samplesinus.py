@@ -33,16 +33,13 @@ class SampleSinus(object):
 
     """
 
-    SEED = 4567205 # random seed
+    SEED = 123456 # random seed
 
-    X_LBU = 0.0  # Lower Bound Uniform distribution
-    X_UBU = 1.0  # Upper Bound Uniform distribution
+    X_LBU = 0.0     # Lower Bound Uniform distribution
+    X_UBU = 1.0     # Upper Bound Uniform distribution
     STD_NOISE = 0.3 # standard deviation normal error distribution
 
-    FILEFRMT = 'sin_N{0}_{1}.dat'  # File name format, replace {0} with N,
-        # replace {1} with sampling option, either x or xt.
-
-    NLARGE = 10001 # decritization number of f(x) (vizualization)
+    NLARGE = 10001  # decritization number of f(x) (vizualization)
 
     def __init__(self, seed=None):
         """ Initialize SampleSinus object. """
@@ -53,7 +50,7 @@ class SampleSinus(object):
         # construct random state object
         self.random_state = np.random.RandomState(seed)
 
-    def target(self, N, file_name=None, xdistr=None):
+    def target(self, N, file_name, xdistr=None):
         """ Execute sampling operation (see class description)
 
         :param N - int, number of data points.
@@ -61,9 +58,6 @@ class SampleSinus(object):
 
         :output None - write data to file.
         """
-        if file_name is None:
-            file_name = self.FILEFRMT.format(N, 'xt')
-
         if xdistr is None or xdistr == 'evenly':
             x = np.linspace(self.X_LBU, self.X_UBU, N)
         elif xdistr == 'random':
@@ -72,19 +66,16 @@ class SampleSinus(object):
         y = np.sin(2*np.pi*x)
         e = self.random_state.normal(loc=0.0, scale=self.STD_NOISE, size=N)
         t = y + e
-        title = 'input\ttarget'
-        DataIO.write_data( [x, t], file_name, title)
+        title = 'input\ttarget\terror'
+        DataIO.write_data( [x, t, e], file_name, title)
 
-    def sinus_function(self):
+    def function(self, file_name):
         x = np.linspace(self.X_LBU, self.X_UBU, self.NLARGE)
         f = np.sin(2*np.pi*x)
         title = 'input\tsinus function'
-        DataIO.write_data([x, f], 'sinus.func', title)
+        DataIO.write_data([x, f], file_name, title)
 
-    def input(self, N, file_name=None):
-        if file_name is None:
-            file_name = self.FILEFRMT.format(N, 'x')
-
+    def input(self, N, file_name):
         x = self.random_state.uniform(self.X_LBU, self.X_UBU, N)
         title = 'input'
         DataIO.write_data([x], file_name, title)

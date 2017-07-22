@@ -26,11 +26,7 @@ class ClosedForm(object):
     YVALUE
     - given x value, return y(x, w)
 
-    """
-
-    WEIGHTS_FRMT = 'weights_M{0}.dat'    
-    POLY_FRMT = 'poly_M{0}.func'
-    
+    """    
     X_LB = 0.0  # Lower Bound 
     X_UB = 1.0  # Upper Bound
     NLARGE = 100001 # decritization number of y(x, w) (vizualization)
@@ -43,38 +39,46 @@ class ClosedForm(object):
         self.W = None
         self.polynomial = None
 
-    def solve(self, file_name):
+        self.RMSE_train = None
+        self.RMSE_test = None
+
+    def solve(self, file_name, file_out, ln_lambda=None):
         """ Import data, compute weights.
 
         :param file_name - str, name of data file.
+        :param file_out - str, name of the data file to store the weights.
+        :param ln_lambda - flaot, regularization constant.
 
         :output None - weights are computed and exported.
         """ 
         data = DataIO.read_data(file_name)
-        assert(len(data) == 2)
-        x, t = data
+        x, t, e = data
 
-        self._populate_A(x)
+        self._populate_A(x, ln_lambda)
         self._populate_T(x, t)
         self.W = sciLinalg.solve(self.A, self.T)
-
-        #L, lower = sciLinalg.cho_factor(self.A)
-        #self.W = sciLinalg.cho_solve( (L, lower), self.T)
-        
         # store polynomial function
         self._polynomial = self._vectorize_polynomial() 
 
-        file_out = self.WEIGHTS_FRMT.format(self.M)
         title = 'weights'
         DataIO.write_data([self.W], file_out, title)    
 
-    def function(self, file_name=None):
-        if file_name is None:
-            file_name = self.POLY_FRMT.format(self.M)
+        # compute Ermse
+        y = self._polynomial(x)
+        self.RMSE_train = np.sqrt( np.mean( (y-t)**2 ) ) 
+
+    def function(self, file_name):
         x = np.linspace(self.X_LB, self.X_UB, self.NLARGE)
         y = self._polynomial(x)
         title = 'input\tpolynomial'
         DataIO.write_data([x,y], file_name, title)
+
+    def test(self, file_name):
+        """ Compute RMSE test data set. """
+        data = DataIO.read_data(file_name)
+        x, t, e = data
+        y = self._polynomial(x)
+        self.RMSE_test = np.sqrt( np.mean( (y-t)**2 ) )
 
     def yvalue(self, x):
         """ return y value, given x value. """
@@ -90,17 +94,25 @@ class ClosedForm(object):
             return y
         return np.vectorize(polynomial)
 
-    def _populate_A(self, x):
+    def _populate_A(self, x, ln_lambda):
         """ Construct symmetric A matrix. 
 
         :param x - input vector of length N.
         """
+        if ln_lambda is not None:
+            l = np.exp(ln_lambda)
+        else:
+            l = 0
+
         for i in range(self.M+1):
             for j in range(i, self.M+1):
                 Aij = sum([xn**(i+j) for xn in x])
-                self.A[i,j] = Aij
-                if i != j:
+                if i !=j:
+                    self.A[i,j] = Aij
                     self.A[j,i] = Aij
+                else:
+                    self.A[i,i] = Aij + l
+
 
     def _populate_T(self, x, t):
         """ Construct vector T.

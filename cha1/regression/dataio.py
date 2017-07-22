@@ -23,17 +23,17 @@ class DataIO(object):
         """
         with open(file_name, 'w') as f:
             f.write(title +' \n')
-
+            
             if len(cols) > 1:
-                seg = '{0:.5f}'
+                seg = '{0:.10f}'
                 for values in zip(*cols):
                     line = [seg.format(v) for v in values]
                     line = '\t'.join(line) + '\n'
                     f.write(line)
             elif len(cols) == 1:
-                line = '{0:.5f}\n'
+                seg = '{0:.10f}\n'
                 for x in cols[0]:
-                    line = line.format(x)
+                    line = seg.format(x)
                     f.write(line)
 
     @classmethod
